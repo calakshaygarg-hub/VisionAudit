@@ -6,9 +6,9 @@ import pandas as pd
 from supabase import create_client, Client
 import io
 
-# --- 1. SECURE CONNECTION ---
-URL = "https://nrwbpiovgggojktgtiux.supabase.co"
-KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yd2JwaW92Z2dnb2prdGd0aXV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0NTE0NzMsImV4cCI6MjA5MDAyNzQ3M30.PdmubwCB1qv-7Y_ndUgUvTaM4U6KYi5KpUipzUbrw6o"
+# --- 1. SECURE CONNECTION (Using Streamlit Secrets) ---
+URL = st.secrets["SUPABASE_URL"]
+KEY = st.secrets["SUPABASE_KEY"]
 supabase: Client = create_client(URL, KEY)
 
 # --- 2. SECURITY CHECK (NEW) ---
