@@ -67,7 +67,7 @@ if uploaded_files:
                 current_file_images.append({"name": uploaded_file.name, "img": image, "hash": h})
 
             for item in current_file_images:
-                response = supabase.table("image_inventory").select("id").eq("image_hash", str(item["hash"])).execute()
+                response = supabase.table("image_inventory").select("id", "file_name", "case_name").eq("image_hash", str(item["hash"])).execute()
                 matches = [row for row in response.data if row["file_name"] != item["name"]]
                 
                 if matches:
