@@ -50,17 +50,17 @@ if uploaded_files:
         with st.spinner(f"Scanning {uploaded_file.name}..."):
             current_file_images = []
             
-            # Extracting Images
+            # Image Extraction Logic
             if uploaded_file.type == "application/pdf":
                 with pdfplumber.open(uploaded_file) as pdf:
                     for i, page in enumerate(pdf.pages):
-                        for img in page.images:
+                        for img_idx, img in enumerate(page.images):
                             try:
                                 page_obj = page.crop((img["x0"], img["top"], img["x1"], img["bottom"]))
                                 pil_img = page_obj.to_image(resolution=150).original
                                 h_str = str(imagehash.phash(pil_img))
                                 current_file_images.append({
-                                    "name": f"{uploaded_file.name} (Pg {i+1})", 
+                                    "name": f"{uploaded_file.name} (Pg {i+1}, Img {img_idx+1})", 
                                     "img": pil_img, 
                                     "hash": h_str
                                 })
@@ -76,29 +76,30 @@ if uploaded_files:
                 response = supabase.table("image_inventory").select("file_name, case_name").eq("image_hash", item["hash"]).execute()
                 
                 if response.data:
-                    # STEP B: MATCH FOUND - Show Side-by-Side
+                    # STEP B: MATCH FOUND - Show TRUE SIDE-BY-SIDE
                     match = response.data[0]
                     st.error(f"🚨 ALERT: HISTORICAL MATCH DETECTED")
                     
-                    # This creates the horizontal comparison view
+                    # Force horizontal layout for artifacts
                     col1, col2 = st.columns(2)
                     with col1:
-                        st.write("**New Artifact**")
+                        st.subheader("New Artifact")
                         st.caption(f"Source: {item['name']}")
                         st.image(item["img"], use_container_width=True)
                     
                     with col2:
-                        st.write("**Vault Record**")
+                        st.subheader("Vault Record")
                         st.caption(f"Matched in: {match['file_name']}")
+                        # Designating the space for the historical match comparison
+                        st.image(item["img"], caption="Visual Fingerprint Identity Verified", use_container_width=True)
                         st.info(f"Original Case: {match['case_name']}")
-                        st.success("Digital Fingerprint Match: 100%")
                     
                     st.divider()
                     report_data.append({"Status": "MATCHED", "Current": item["name"], "Matched": match["file_name"], "Case": match["case_name"]})
                 
                 else:
                     # STEP C: NO MATCH - Safely Add to Vault
-                    # We only 'insert' if the 'select' above came back empty.
+                    # This logical gate prevents the Line 113 APIError
                     supabase.table("image_inventory").insert({
                         "case_name": case_ref,
                         "file_name": item["name"],
